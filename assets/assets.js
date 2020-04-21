@@ -4,7 +4,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var del = require('del');
 var File = require('vinyl');
-var gulp = require('gulp');
+var requiredGulp = require('gulp');
 var mergeStream = require('merge-stream');
 var through2 = require('through2');
 var path = require('path');
@@ -35,13 +35,16 @@ var Assets = {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _extends(Assets.installOptions, options);
+
+    var gulp = Assets.installOptions.gulp || requiredGulp;
+
     gulp.task('clean-assets', Assets.tasks.cleanAssets);
 
-    gulp.task('assets', ['clean-assets'], Assets.tasks.assets);
+    gulp.task('assets', gulp.series('clean-assets', Assets.tasks.assets));
 
     gulp.task('clean-assets-html', Assets.tasks.cleanAssetsHtml);
 
-    gulp.task('assets-html', ['clean-assets-html'], Assets.tasks.assetsHtml);
+    gulp.task('assets-html', gulp.series('clean-assets-html', Assets.tasks.assetsHtml));
 
     gulp.task('assets-config', Assets.tasks.assetsConfig);
 
@@ -80,6 +83,8 @@ var Assets = {
         _ref2$watch = _ref2.watch,
         watch = _ref2$watch === undefined ? false : _ref2$watch;
 
+    var gulp = Assets.installOptions.gulp || requiredGulp;
+
     var stream = gulp.src(['app/stylesheets/application.scss']).pipe(plugins.plumber());
     if (watch) {
       gulp.src('app/stylesheets/**/*.scss').pipe(plugins.progeny());
@@ -98,6 +103,7 @@ var Assets = {
         _ref3$watch = _ref3.watch,
         watch = _ref3$watch === undefined ? false : _ref3$watch;
 
+    var gulp = Assets.installOptions.gulp || requiredGulp;
     var stream = gulp.src('app/images/**/*', { base: '.' });
     if (watch) stream = stream.pipe(plugins.watch('app/images/*'));
     return stream.pipe(plugins.rename({ dirname: 'images' }));
@@ -106,6 +112,8 @@ var Assets = {
     var _ref4 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
         _ref4$watch = _ref4.watch,
         watch = _ref4$watch === undefined ? false : _ref4$watch;
+
+    var gulp = Assets.installOptions.gulp || requiredGulp;
 
     var webpackConfig = require('../webpack/webpack.config')(process.env.NODE_ENV);
 
@@ -147,7 +155,13 @@ var Assets = {
           return assetPath(f, assetConfig);
         }));
         var entryComponent = require(entryPath);
-        var props = { entry: entryComponent, scripts: scriptPaths, stylesheets: stylesheetPaths, title: title, config: config };
+        var props = {
+          entry: entryComponent,
+          scripts: scriptPaths,
+          stylesheets: stylesheetPaths,
+          title: title,
+          config: config
+        };
         var html = '<!doctype html>' + ReactDOMServer.renderToStaticMarkup(React.createElement(Layout, props));
         var indexFile = new File({
           path: 'index.html',
@@ -175,6 +189,7 @@ var Assets = {
   javascript: function javascript() {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
+    var gulp = Assets.installOptions.gulp || requiredGulp;
     var webpackConfig = require('../webpack/webpack.config')(process.env.NODE_ENV, options);
 
     var _require3 = require('./asset_helper'),
@@ -205,18 +220,21 @@ var Assets = {
     },
     assets: function assets() {
       var stream = Assets.all();
-      var buildDirectory = Assets.installOptions.buildDirectory;
+      var _Assets$installOption = Assets.installOptions,
+          buildDirectory = _Assets$installOption.buildDirectory,
+          gulp = _Assets$installOption.gulp;
 
       if (!isProduction()) return stream.pipe(gulp.dest(buildDirectory));
       var cloneSink = plugins.clone.sink();
       return stream.pipe(gulp.dest(buildDirectory)).pipe(plugins.rev()).pipe(plugins.revCssUrl()).pipe(cloneSink).pipe(gulp.dest(buildDirectory)).pipe(plugins.rev.manifest()).pipe(gulp.dest(buildDirectory)).pipe(cloneSink.tap()).pipe(plugins.gzip()).pipe(gulp.dest(buildDirectory));
     },
     assetsHtml: function assetsHtml(done) {
+      var gulp = Assets.installOptions.gulp || requiredGulp;
       var watch = isDevelopment();
-      var _Assets$installOption = Assets.installOptions,
-          buildDirectory = _Assets$installOption.buildDirectory,
-          _Assets$installOption2 = _Assets$installOption.htmlBuildDirectory,
-          htmlBuildDirectory = _Assets$installOption2 === undefined ? buildDirectory : _Assets$installOption2;
+      var _Assets$installOption2 = Assets.installOptions,
+          buildDirectory = _Assets$installOption2.buildDirectory,
+          _Assets$installOption3 = _Assets$installOption2.htmlBuildDirectory,
+          htmlBuildDirectory = _Assets$installOption3 === undefined ? buildDirectory : _Assets$installOption3;
 
       var once = false;
       Assets.html({ watch: watch }).pipe(gulp.dest(htmlBuildDirectory)).pipe(spy.obj(function (chunk) {
@@ -231,8 +249,10 @@ var Assets = {
 
     assetsServer: require('./assets_server'),
 
-    assetsConfig: function assetsConfig() {
+    assetsConfig: function assetsConfig(done) {
+      var gulp = Assets.installOptions.gulp || requiredGulp;
       Assets.config().pipe(gulp.dest(Assets.installOptions.buildDirectory));
+      done();
     }
   }
 };

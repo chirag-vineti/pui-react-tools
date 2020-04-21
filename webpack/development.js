@@ -18,8 +18,27 @@ module.exports = {
   },
   externals: null,
   module: {
-    loaders: [{ test: [/\.png(\?|$)/, /\.gif(\?|$)/, /\.eot(\?|$)/, /\.ttf(\?|$)/, /\.woff2?(\?|$)/, /\.jpe?g(\?|$)/], loader: 'url' }, { test: [/\.svg(\?|$)/], include: /node_modules/, loader: 'url' }, { test: /\.css$/, exclude: /typography/, loaders: ['style', 'css?sourceMap'] }, { test: /\.css$/, include: /typography/, loaders: ['style', 'css'] }, { test: /\.scss$/, loaders: ['style', 'css?sourceMap', 'sass?sourceMap'] }, { test: /\.jsx?$/, exclude: /node_modules/, loaders: ['react-hot', 'babel'] }]
+    loaders: [{
+      test: [/\.png(\?|$)/, /\.gif(\?|$)/, /\.eot(\?|$)/, /\.ttf(\?|$)/, /\.woff2?(\?|$)/, /\.jpe?g(\?|$)/],
+      loader: 'url-loader'
+    }, { test: [/\.svg(\?|$)/], include: /node_modules/, loader: 'url-loader' }, {
+      test: /\.css$/,
+      exclude: /typography/,
+      loaders: ['style-loader', 'css-loader?sourceMap']
+    }, {
+      test: /\.css$/,
+      include: /typography/,
+      loaders: ['style-loader', 'css-loader']
+    }, {
+      test: /\.scss$/,
+      loaders: ['style-loader', 'css-loader', 'sass-loader', 'sass-loader?sourceMap']
+    }, {
+      test: /\.jsx?$/,
+      exclude: /node_modules/,
+      loaders: ['react-hot-loader', 'babel-loader']
+    }]
   },
+
   output: {
     filename: '[name].js',
     chunkFilename: '[id].js',

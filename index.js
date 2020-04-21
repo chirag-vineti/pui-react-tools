@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = {
-  Assets: require("./dist/assets/assets"),
-  Foreman: require("./dist/foreman/foreman"),
-  Lint: require("./dist/lint/lint"),
-  Jasmine: require("./dist/jasmine/jasmine")
+  Assets: require('./assets/assets'),
+  Foreman: require('./foreman/foreman'),
+  Lint: require('./lint/lint'),
+  Jasmine: require('./jasmine/jasmine')
 };

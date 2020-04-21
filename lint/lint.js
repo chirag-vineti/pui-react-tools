@@ -2,19 +2,20 @@
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var requiredGulp = require('gulp');
+
 var _require = require('gulp-load-plugins')(),
     plumber = _require.plumber,
     eslint = _require.eslint,
     gulpIf = _require.if;
 
 var lazypipe = require('lazypipe');
-var gulp = require('gulp');
 
 var _require2 = require('gulp-util'),
     log = _require2.log,
     colors = _require2.colors;
 
-function lint() {
+function _lint(gulp) {
   var _process$env$FIX = process.env.FIX,
       fix = _process$env$FIX === undefined ? true : _process$env$FIX;
 
@@ -44,7 +45,8 @@ var Lint = {
     var installOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _extends(Lint.installOptions, installOptions);
-    gulp.task('lint', Lint.tasks.lint());
+    var gulp = installOptions.gulp || requiredGulp;
+    gulp.task('lint', Lint.tasks.lint(gulp));
   },
 
 
@@ -52,14 +54,15 @@ var Lint = {
     globs: ['gulpfile.js', 'app/**/*.js', 'helpers/**/*.js', 'server/**/*.js', 'spec/**/*.js', 'tasks/**/*.js', 'lib/**/*.js']
   },
 
-  lint: lint(),
+  lint: function lint(gulp) {
+    return _lint(gulp)();
+  },
 
   tasks: {
-    lint: function lint() {
+    lint: function lint(gulp) {
       return function (done) {
         var globs = Lint.installOptions.globs;
-        gulp.src(globs, { base: '.' }).pipe(Lint.lint());
-        done();
+        gulp.src(globs, { base: '.' }).pipe(Lint.lint(gulp)).on('end', done);
       };
     }
   }

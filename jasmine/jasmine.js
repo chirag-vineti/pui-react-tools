@@ -4,7 +4,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
-var gulp = require('gulp');
+// const gulp = require('gulp');
 var mergeStream = require('merge-stream');
 
 var _require = require('gulp-load-plugins')(),
@@ -35,10 +35,15 @@ var Jasmine = {
   install: function install() {
     var installOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
+    var gulp = installOptions.gulp;
     _extends(Jasmine.installOptions, installOptions);
     gulp.task('jasmine', Jasmine.tasks.jasmine);
-    gulp.task('spec-app', Jasmine.tasks.specApp);
-    gulp.task('spec-server', Jasmine.tasks.specServer);
+
+    gulp.task('spec-app', function (done) {
+      Jasmine.tasks.specApp(done);
+    });
+
+    // gulp.task('spec-server', Jasmine.tasks.specServer);
   },
   appAssets: function appAssets(options) {
     var gulpOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -51,7 +56,9 @@ var Jasmine = {
           rest = _objectWithoutProperties(_ref, ['plugins']);
 
       var testConfig = require('../webpack/webpack.config')('test', rest);
-      var webpackConfig = _extends({}, testConfig, options, { plugins: (testConfig.plugins || []).concat(plugins || []) });
+      var webpackConfig = _extends({}, testConfig, options, {
+        plugins: (testConfig.plugins || []).concat(plugins || [])
+      });
       javascript = javascript.pipe(webpack(webpackConfig));
     }
 
@@ -72,19 +79,32 @@ var Jasmine = {
           browserServerOptions = _Jasmine$installOptio.browserServerOptions,
           browserSpecRunnerOptions = _Jasmine$installOptio.browserSpecRunnerOptions;
 
-      return Jasmine.appAssets({ plugins: [plugin], browserAppAssetsOptions: browserAppAssetsOptions }).pipe(jasmineBrowser.specRunner(browserSpecRunnerOptions)).pipe(jasmineBrowser.server(_extends({ whenReady: plugin.whenReady }, browserServerOptions)));
+      return Jasmine.appAssets({ plugins: [plugin], browserAppAssetsOptions: browserAppAssetsOptions }).pipe(jasmineBrowser.specRunner(browserSpecRunnerOptions)).pipe(jasmineBrowser.server(_extends({
+        whenReady: plugin.whenReady
+      }, browserServerOptions)));
     },
-    specApp: function specApp() {
+    specApp: function specApp(done) {
       var _Jasmine$installOptio2 = Jasmine.installOptions,
           headlessAppAssetsOptions = _Jasmine$installOptio2.headlessAppAssetsOptions,
           headlessServerOptions = _Jasmine$installOptio2.headlessServerOptions,
           headlessSpecRunnerOptions = _Jasmine$installOptio2.headlessSpecRunnerOptions;
 
-      return Jasmine.appAssets(_extends({ watch: false }, headlessAppAssetsOptions)).pipe(jasmineBrowser.specRunner(_extends({ console: true }, headlessSpecRunnerOptions))).pipe(jasmineBrowser.headless(_extends({ driver: 'phantomjs' }, headlessServerOptions)));
+      return Jasmine.appAssets(_extends({
+        watch: false,
+        done: done
+      }, headlessAppAssetsOptions)).pipe(jasmineBrowser.specRunner(_extends({
+        console: true
+      }, headlessSpecRunnerOptions))).pipe(jasmineBrowser.headless(_extends({
+        driver: 'phantomjs'
+      }, headlessServerOptions))).on('data', function (x) {
+        return x;
+      }).on('end', done);
     },
     specServer: function specServer() {
       var env = processEnv({ NODE_ENV: 'test' });
-      return pipe(Jasmine.serverAssets(), env, jasmine(_extends({ includeStackTrace: true }, Jasmine.installOptions.serverOptions)), env.restore());
+      return pipe(Jasmine.serverAssets(), env, jasmine(_extends({
+        includeStackTrace: true
+      }, Jasmine.installOptions.serverOptions)), env.restore());
     }
   }
 };
